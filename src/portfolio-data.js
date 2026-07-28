@@ -208,6 +208,18 @@ bool crsf_parse(const uint8_t *buf, size_t n) {
       ["RECOVERY", "—"],
     ],
     queue: ["todo one", "todo two"],
+    media: [
+      {
+        type: "model",
+        src: "src/assets/Rocket Assembly (~recovered).glb",
+        caption: "Board revision B — drag to orbit",
+      },
+      {
+        type: "image",
+        src: "/img/fc-bringup.jpg",
+        caption: "First successful gyro read over SPI",
+      },
+    ],
   },
 ];
 
