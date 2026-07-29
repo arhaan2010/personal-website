@@ -203,11 +203,11 @@ bool crsf_parse(const uint8_t *buf, size_t n) {
     blurb:
       "Fill this in. Keep the object shape — id, name, status, blurb — and the card plus detail page build themselves.",
     specs: [
-      ["MOTOR", "—"],
-      ["APOGEE", "—"],
-      ["RECOVERY", "—"],
+      ["MOTOR", "K class"],
+      ["APOGEE", "2 KM"],
+      ["RECOVERY", "Dual drogue + main"],
     ],
-    queue: ["todo one", "todo two"],
+    queue: ["add maneuvering capabilities", "solve pre-ejection problems"],
     media: [
       {
         type: "model",
@@ -217,6 +217,11 @@ bool crsf_parse(const uint8_t *buf, size_t n) {
       {
         type: "image",
         src: "/img/fc-bringup.jpg",
+        caption: "First successful gyro read over SPI",
+      },
+      {
+        type: "video",
+        src: "/img/fc-bringup.mp4",
         caption: "First successful gyro read over SPI",
       },
     ],
