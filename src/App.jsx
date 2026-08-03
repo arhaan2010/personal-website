@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import {
   PROFILE,
   PROJECTS,
@@ -8,27 +8,63 @@ import {
   LOG_POOL,
 } from "./portfolio-data.js";
 
-/* ── shared type scale ─────────────────────────────────────────── */
+/* ── type scale ────────────────────────────────────────────────── */
 const micro = { fontSize: "10px", letterSpacing: "0.18em" };
 const tiny = { fontSize: "11px", letterSpacing: "0.06em" };
 const clamp = (v, lo = 4, hi = 96) => Math.max(lo, Math.min(hi, v));
 const norm = (s) => (s || "").toUpperCase();
 
+/* ═══ THEMES ════════════════════════════════════════════════════
+   Every accent in the app uses Tailwind's emerald-400 utilities.
+   This stylesheet remaps those utilities to a CSS variable, so
+   swapping one variable retints the whole page.
+   ═════════════════════════════════════════════════════════════ */
+const THEMES = {
+  phosphor: "#4ade80",
+  amber: "#fbbf24",
+  ice: "#38bdf8",
+  blood: "#f87171",
+};
+const THEME_IDS = Object.keys(THEMES);
+
+const ACCENT_CSS = `
+.tp .text-emerald-400{color:var(--accent)}
+.tp .bg-emerald-400{background-color:var(--accent)}
+.tp .border-emerald-400{border-color:var(--accent)}
+.tp .stroke-emerald-400{stroke:var(--accent)}
+.tp .hover\\:text-emerald-400:hover{color:var(--accent)}
+.tp .hover\\:bg-emerald-400:hover{background-color:var(--accent)}
+.tp .hover\\:border-emerald-400:hover{border-color:var(--accent)}
+.tp .focus\\:ring-emerald-400:focus{--tw-ring-color:var(--accent)}
+.tp ::selection{background:var(--accent);color:#0a0a0a}
+`;
+
+function useAccentStylesheet() {
+  useEffect(() => {
+    if (document.getElementById("tp-accent")) return;
+    const el = document.createElement("style");
+    el.id = "tp-accent";
+    el.textContent = ACCENT_CSS;
+    document.head.appendChild(el);
+  }, []);
+}
+
+/* ── primitives ────────────────────────────────────────────────── */
 function Rule() {
   return <div className="h-px w-full bg-neutral-800" />;
 }
 
 function PanelHead({ tag, id, right }) {
   return (
-    <div className="flex items-center justify-between border-b border-neutral-800 px-4 py-3">
-      <div className="flex items-center gap-3">
-        <span className="h-2 w-2 border border-neutral-600" />
-        <span className="font-bold text-neutral-200" style={micro}>
+    <div className="flex items-center justify-between gap-3 border-b border-neutral-800 px-4 py-3">
+      <div className="flex min-w-0 items-center gap-3">
+        <span className="h-2 w-2 shrink-0 border border-neutral-600" />
+        <span className="truncate font-bold text-neutral-200" style={micro}>
           {tag}
         </span>
       </div>
       {right || (
-        <span className="text-neutral-700" style={micro}>
+        <span className="shrink-0 text-neutral-700" style={micro}>
           {id}
         </span>
       )}
@@ -51,7 +87,24 @@ function StatusPill({ status }) {
   );
 }
 
-/* ── hash routing — no dependency, and the URLs are shareable ──── */
+function Tag({ label, active, onClick }) {
+  const Comp = onClick ? "button" : "span";
+  return (
+    <Comp
+      onClick={onClick}
+      className={`border px-2 py-1 focus:outline-none focus:ring-1 focus:ring-emerald-400 ${
+        active
+          ? "border-emerald-400 text-emerald-400"
+          : "border-neutral-800 text-neutral-600 hover:border-neutral-600 hover:text-neutral-300"
+      }`}
+      style={micro}
+    >
+      {label}
+    </Comp>
+  );
+}
+
+/* ── routing ───────────────────────────────────────────────────── */
 function readHash() {
   const h = (typeof window !== "undefined" && window.location.hash) || "";
   const m = h.match(/^#\/p\/(.+)$/);
@@ -93,7 +146,10 @@ function Boot({ onDone }) {
       onClick={onDone}
     >
       <div className="w-full max-w-lg font-mono">
-        <div className="mb-4 border-b border-neutral-800 pb-2 font-bold text-emerald-400" style={micro}>
+        <div
+          className="mb-4 border-b border-neutral-800 pb-2 font-bold text-emerald-400"
+          style={micro}
+        >
           FC_BOOT v0.4.1
         </div>
         {BOOT_LINES.slice(0, n).map((l, i) => (
@@ -109,12 +165,15 @@ function Boot({ onDone }) {
           </div>
         ))}
         <span className="mt-1 inline-block h-3 w-2 bg-emerald-400" />
+        <div className="mt-6 text-neutral-800" style={micro}>
+          CLICK TO SKIP
+        </div>
       </div>
     </div>
   );
 }
 
-/* ── attitude source: real device sensor, with sim fallback ────── */
+/* ── attitude source ───────────────────────────────────────────── */
 const SIM = "sim";
 const LIVE = "live";
 const NONE = "none";
@@ -242,7 +301,14 @@ function Attitude() {
             <g transform={`rotate(${-att.roll} 50 50) translate(0 ${att.pitch * 1.4})`}>
               <rect x="-60" y="-60" width="220" height="110" fill="#0f0f0f" />
               <rect x="-60" y="50" width="220" height="150" fill="#141414" />
-              <line x1="-60" y1="50" x2="220" y2="50" stroke="#4ade80" strokeWidth="0.7" />
+              <line
+                x1="-60"
+                y1="50"
+                x2="220"
+                y2="50"
+                className="stroke-emerald-400"
+                strokeWidth="0.7"
+              />
               {[-30, -15, 15, 30].map((o) => (
                 <line
                   key={o}
@@ -267,7 +333,7 @@ function Attitude() {
             <polyline
               points={pts}
               fill="none"
-              stroke="#4ade80"
+              className="stroke-emerald-400"
               strokeWidth="1.2"
               vectorEffect="non-scaling-stroke"
             />
@@ -278,7 +344,10 @@ function Attitude() {
         </div>
 
         {mode === NONE && (
-          <p className="border border-neutral-800 p-3 leading-relaxed text-neutral-500" style={tiny}>
+          <p
+            className="border border-neutral-800 p-3 leading-relaxed text-neutral-500"
+            style={tiny}
+          >
             This machine reports no motion sensor. Most clamshell laptops don't expose one to the
             browser — open the page on a phone, over HTTPS, and press LINK again.
           </p>
@@ -301,12 +370,13 @@ function Attitude() {
   );
 }
 
-/* ── rolling log ───────────────────────────────────────────────── */
+/* ── clock helpers ─────────────────────────────────────────────── */
 function stamp(off) {
   const d = new Date(Date.now() - off * 4000);
-  return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}:${String(
-    d.getSeconds()
-  ).padStart(2, "0")}`;
+  return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(
+    2,
+    "0"
+  )}:${String(d.getSeconds()).padStart(2, "0")}`;
 }
 
 function LogFeed() {
@@ -342,11 +412,10 @@ function LogFeed() {
 }
 
 /* ═══ 3D MODEL VIEWER ═══════════════════════════════════════════
-   Loads Google's <model-viewer> web component on demand. In your
-   Vite project the cleaner route is:
-       npm install @google/model-viewer
-   then add  import "@google/model-viewer";  to main.jsx — after
-   which this CDN fallback never fires.
+   npm install @google/model-viewer, then add
+       import "@google/model-viewer";
+   to main.jsx. The CDN fallback below is only for when that
+   package isn't installed.
    ═════════════════════════════════════════════════════════════ */
 let mvPromise = null;
 function ensureModelViewer() {
@@ -364,7 +433,7 @@ function ensureModelViewer() {
   return mvPromise;
 }
 
-function ModelFrame({ src, poster }) {
+function ModelFrame({ src, poster, autoRotate }) {
   const [state, setState] = useState("loading");
   useEffect(() => {
     let alive = true;
@@ -384,15 +453,15 @@ function ModelFrame({ src, poster }) {
         </span>
         {state === "failed" && (
           <span className="max-w-xs leading-relaxed text-neutral-700" style={tiny}>
-            Run <span className="text-neutral-400">npm i @google/model-viewer</span> and import it in
-            main.jsx.
+            Run <span className="text-neutral-400">npm i @google/model-viewer</span> and import it
+            in main.jsx.
           </span>
         )}
       </div>
     );
   }
 
-  return React.createElement("model-viewer", {
+  const props = {
     src,
     poster,
     "camera-controls": true,
@@ -402,80 +471,198 @@ function ModelFrame({ src, poster }) {
     exposure: "0.9",
     "interaction-prompt": "none",
     style: { width: "100%", height: "100%", backgroundColor: "#0a0a0a" },
-  });
+  };
+  if (autoRotate) {
+    props["auto-rotate"] = true;
+    props["rotation-per-second"] = "18deg";
+  }
+  return React.createElement("model-viewer", props);
 }
 
-/* ── media gallery: images + 3D in one strip ───────────────────── */
-function MediaViewer({ media }) {
-  const [i, setI] = useState(0);
-  const [broken, setBroken] = useState({});
-  if (!media || media.length === 0) return null;
-  const item = media[i];
-
-  return (
-    <div className="border border-neutral-800 bg-neutral-950">
-      <PanelHead
-        tag="MEDIA"
-        right={
-          <span className="text-neutral-700" style={micro}>
-            {String(i + 1).padStart(2, "0")} / {String(media.length).padStart(2, "0")} ·{" "}
-            {item.type === "model" ? "GLB" : "IMG"}
-          </span>
-        }
-      />
-
-      <div className="relative aspect-video w-full overflow-hidden bg-neutral-950">
-        {item.type === "model" ? (
-          <ModelFrame src={item.src} poster={item.poster} />
-        ) : broken[i] ? (
-          <div className="flex h-full w-full flex-col items-center justify-center gap-2 px-6 text-center">
-            <span className="text-neutral-600" style={micro}>
-              NO FILE FOUND
-            </span>
-            <span className="text-neutral-700" style={tiny}>
-              Expected it at public{item.src}
-            </span>
-          </div>
-        ) : (
-          <img
-            src={item.src}
-            alt={item.caption || ""}
-            onError={() => setBroken((b) => ({ ...b, [i]: true }))}
-            className="h-full w-full object-contain"
-          />
-        )}
+/* ── one media slide, reused by the panel and the lightbox ─────── */
+function MediaSlide({ item, onBroken, broken, autoRotate }) {
+  if (item.type === "model") {
+    return <ModelFrame src={item.src} poster={item.poster} autoRotate={autoRotate} />;
+  }
+  if (broken) {
+    return (
+      <div className="flex h-full w-full flex-col items-center justify-center gap-2 px-6 text-center">
+        <span className="text-neutral-600" style={micro}>
+          NO FILE FOUND
+        </span>
+        <span className="text-neutral-700" style={tiny}>
+          Expected it at public{item.src}
+        </span>
       </div>
-
-      {item.caption && (
-        <div className="border-t border-neutral-800 px-4 py-2 text-neutral-500" style={tiny}>
-          {item.caption}
-        </div>
-      )}
-
-      {media.length > 1 && (
-        <div className="flex flex-wrap gap-px border-t border-neutral-800 bg-neutral-800">
-          {media.map((m, k) => (
-            <button
-              key={k}
-              onClick={() => setI(k)}
-              className={`flex-1 bg-neutral-950 px-3 py-2 hover:text-neutral-200 focus:outline-none focus:ring-1 focus:ring-emerald-400 ${
-                k === i ? "text-emerald-400" : "text-neutral-600"
-              }`}
-              style={micro}
-            >
-              {m.type === "model" ? "3D" : "IMG"} {String(k + 1).padStart(2, "0")}
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
+    );
+  }
+  if (item.type === "video") {
+    return (
+      <video
+        src={item.src}
+        controls
+        loop
+        muted
+        playsInline
+        poster={item.poster}
+        onError={onBroken}
+        className="h-full w-full object-contain"
+      />
+    );
+  }
+  return (
+    <img
+      src={item.src}
+      alt={item.caption || ""}
+      onError={onBroken}
+      className="h-full w-full object-contain"
+    />
   );
 }
 
-/* ═══ CODE BLOCK ════════════════════════════════════════════════
-   Single-pass tokenizer — comments, strings, numbers, keywords.
-   No highlighter dependency.
-   ═════════════════════════════════════════════════════════════ */
+const KIND = { model: "GLB", video: "VID", image: "IMG" };
+
+/* ── media gallery + fullscreen lightbox ───────────────────────── */
+function MediaViewer({ media }) {
+  const [i, setI] = useState(0);
+  const [broken, setBroken] = useState({});
+  const [zoom, setZoom] = useState(false);
+  const [spin, setSpin] = useState(false);
+
+  const step = useCallback(
+    (d) => setI((v) => (v + d + media.length) % media.length),
+    [media]
+  );
+
+  useEffect(() => {
+    if (!zoom) return;
+    const onKey = (e) => {
+      if (e.key === "Escape") setZoom(false);
+      if (e.key === "ArrowRight") step(1);
+      if (e.key === "ArrowLeft") step(-1);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [zoom, step]);
+
+  if (!media || media.length === 0) return null;
+  const item = media[i];
+  const mark = (k) => () => setBroken((b) => ({ ...b, [k]: true }));
+
+  return (
+    <>
+      <div className="border border-neutral-800 bg-neutral-950">
+        <PanelHead
+          tag="MEDIA"
+          right={
+            <div className="flex items-center gap-2">
+              {item.type === "model" && (
+                <button
+                  onClick={() => setSpin((s) => !s)}
+                  className={`border px-2 py-1 focus:outline-none focus:ring-1 focus:ring-emerald-400 ${
+                    spin
+                      ? "border-emerald-400 text-emerald-400"
+                      : "border-neutral-800 text-neutral-500 hover:text-neutral-200"
+                  }`}
+                  style={micro}
+                >
+                  SPIN
+                </button>
+              )}
+              <button
+                onClick={() => setZoom(true)}
+                className="border border-neutral-800 px-2 py-1 text-neutral-500 hover:border-neutral-600 hover:text-neutral-200 focus:outline-none focus:ring-1 focus:ring-emerald-400"
+                style={micro}
+              >
+                EXPAND
+              </button>
+              <span className="text-neutral-700" style={micro}>
+                {String(i + 1).padStart(2, "0")}/{String(media.length).padStart(2, "0")}
+              </span>
+            </div>
+          }
+        />
+
+        <div className="relative aspect-video w-full overflow-hidden bg-neutral-950">
+          <MediaSlide
+            item={item}
+            broken={broken[i]}
+            onBroken={mark(i)}
+            autoRotate={spin}
+          />
+        </div>
+
+        {item.caption && (
+          <div className="border-t border-neutral-800 px-4 py-2 text-neutral-500" style={tiny}>
+            {item.caption}
+          </div>
+        )}
+
+        {media.length > 1 && (
+          <div className="flex flex-wrap gap-px border-t border-neutral-800 bg-neutral-800">
+            {media.map((m, k) => (
+              <button
+                key={k}
+                onClick={() => setI(k)}
+                className={`flex-1 bg-neutral-950 px-3 py-2 hover:text-neutral-200 focus:outline-none focus:ring-1 focus:ring-emerald-400 ${
+                  k === i ? "text-emerald-400" : "text-neutral-600"
+                }`}
+                style={micro}
+              >
+                {KIND[m.type] || "IMG"} {String(k + 1).padStart(2, "0")}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {zoom && (
+        <div className="fixed inset-0 z-50 flex flex-col bg-neutral-950">
+          <div className="flex items-center justify-between border-b border-neutral-800 px-4 py-3">
+            <span className="truncate text-neutral-400" style={tiny}>
+              {item.caption || item.src}
+            </span>
+            <div className="flex items-center gap-2">
+              {media.length > 1 && (
+                <>
+                  <button
+                    onClick={() => step(-1)}
+                    className="border border-neutral-800 px-2 py-1 text-neutral-400 hover:text-neutral-100"
+                    style={micro}
+                  >
+                    ‹
+                  </button>
+                  <span className="tabular-nums text-neutral-600" style={micro}>
+                    {i + 1}/{media.length}
+                  </span>
+                  <button
+                    onClick={() => step(1)}
+                    className="border border-neutral-800 px-2 py-1 text-neutral-400 hover:text-neutral-100"
+                    style={micro}
+                  >
+                    ›
+                  </button>
+                </>
+              )}
+              <button
+                onClick={() => setZoom(false)}
+                className="border border-emerald-400 px-3 py-1 text-emerald-400"
+                style={micro}
+              >
+                ESC
+              </button>
+            </div>
+          </div>
+          <div className="min-h-0 flex-1">
+            <MediaSlide item={item} broken={broken[i]} onBroken={mark(i)} autoRotate={spin} />
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
+/* ═══ CODE BLOCK ════════════════════════════════════════════════ */
 const KEYWORDS = {
   c: "auto|break|case|char|const|continue|default|do|double|else|enum|extern|float|for|goto|if|inline|int|long|register|return|short|signed|sizeof|static|struct|switch|typedef|union|unsigned|void|volatile|while|bool|true|false|NULL|uint8_t|uint16_t|uint32_t|int8_t|int16_t|int32_t|size_t",
   js: "const|let|var|function|return|if|else|for|while|do|class|extends|new|await|async|import|export|from|default|try|catch|finally|throw|typeof|instanceof|null|undefined|true|false|this|switch|case|break|continue",
@@ -515,70 +702,143 @@ function tokenize(code, lang) {
   return out;
 }
 
-function CodeBlock({ label, lang, code }) {
-  const [copied, setCopied] = useState(false);
-
-  const copy = async () => {
+async function writeClipboard(text) {
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch {
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    ta.style.position = "fixed";
+    ta.style.opacity = "0";
+    document.body.appendChild(ta);
+    ta.select();
+    let ok = false;
     try {
-      await navigator.clipboard.writeText(code);
+      ok = document.execCommand("copy");
     } catch {
-      const ta = document.createElement("textarea");
-      ta.value = code;
-      ta.style.position = "fixed";
-      ta.style.opacity = "0";
-      document.body.appendChild(ta);
-      ta.select();
-      try {
-        document.execCommand("copy");
-      } catch {
-        /* nothing else to try */
-      }
-      document.body.removeChild(ta);
+      ok = false;
     }
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1400);
-  };
+    document.body.removeChild(ta);
+    return ok;
+  }
+}
+
+function CopyButton({ text, label = "COPY", done = "COPIED" }) {
+  const [hit, setHit] = useState(false);
+  return (
+    <button
+      onClick={async () => {
+        await writeClipboard(text);
+        setHit(true);
+        setTimeout(() => setHit(false), 1400);
+      }}
+      className={`border px-2 py-1 focus:outline-none focus:ring-1 focus:ring-emerald-400 ${
+        hit
+          ? "border-emerald-400 text-emerald-400"
+          : "border-neutral-800 text-neutral-500 hover:border-neutral-600 hover:text-neutral-200"
+      }`}
+      style={micro}
+    >
+      {hit ? done : label}
+    </button>
+  );
+}
+
+function CodeBlock({ label, lang, code }) {
+  const [wrap, setWrap] = useState(false);
+  const lines = code.split("\n");
 
   return (
     <div className="border border-neutral-800 bg-neutral-950">
-      <div className="flex items-center justify-between border-b border-neutral-800 px-4 py-2">
-        <div className="flex items-center gap-3">
-          <span className="text-neutral-300" style={tiny}>
+      <div className="flex items-center justify-between gap-3 border-b border-neutral-800 px-4 py-2">
+        <div className="flex min-w-0 items-center gap-3">
+          <span className="truncate text-neutral-300" style={tiny}>
             {label}
           </span>
-          <span className="text-neutral-700" style={micro}>
-            {(lang || "txt").toUpperCase()}
+          <span className="shrink-0 text-neutral-700" style={micro}>
+            {(lang || "txt").toUpperCase()} · {lines.length}L
           </span>
         </div>
-        <button
-          onClick={copy}
-          className={`border px-2 py-1 focus:outline-none focus:ring-1 focus:ring-emerald-400 ${
-            copied
-              ? "border-emerald-400 text-emerald-400"
-              : "border-neutral-800 text-neutral-500 hover:border-neutral-600 hover:text-neutral-200"
-          }`}
-          style={micro}
-        >
-          {copied ? "COPIED" : "COPY"}
-        </button>
+        <div className="flex shrink-0 items-center gap-2">
+          <button
+            onClick={() => setWrap((w) => !w)}
+            className={`border px-2 py-1 focus:outline-none focus:ring-1 focus:ring-emerald-400 ${
+              wrap
+                ? "border-emerald-400 text-emerald-400"
+                : "border-neutral-800 text-neutral-500 hover:text-neutral-200"
+            }`}
+            style={micro}
+          >
+            WRAP
+          </button>
+          <CopyButton text={code} />
+        </div>
       </div>
-      <pre
-        className="overflow-x-auto p-4 leading-relaxed text-neutral-400"
-        style={{ fontSize: "12px" }}
-      >
-        <code>
-          {tokenize(code, lang).map((tk, k) => (
-            <span key={k} className={tk.c ? TONE[tk.c] : undefined}>
-              {tk.t}
-            </span>
+
+      <div className="flex overflow-x-auto">
+        <div
+          className="shrink-0 select-none border-r border-neutral-800 px-3 py-4 text-right text-neutral-700"
+          style={{ fontSize: "12px", lineHeight: "1.625" }}
+        >
+          {lines.map((_, k) => (
+            <div key={k}>{k + 1}</div>
           ))}
-        </code>
-      </pre>
+        </div>
+        <pre
+          className="flex-1 py-4 pl-4 pr-4 leading-relaxed text-neutral-400"
+          style={{
+            fontSize: "12px",
+            whiteSpace: wrap ? "pre-wrap" : "pre",
+            wordBreak: wrap ? "break-word" : "normal",
+          }}
+        >
+          <code>
+            {tokenize(code, lang).map((tk, k) => (
+              <span key={k} className={tk.c ? TONE[tk.c] : undefined}>
+                {tk.t}
+              </span>
+            ))}
+          </code>
+        </pre>
+      </div>
     </div>
   );
 }
 
-/* ── project card (home grid) ──────────────────────────────────── */
+/* ── stats strip, computed from the data ───────────────────────── */
+function StatsStrip() {
+  const s = useMemo(() => {
+    const media = PROJECTS.reduce((n, p) => n + (p.media ? p.media.length : 0), 0);
+    const snips = PROJECTS.reduce((n, p) => n + (p.code ? p.code.length : 0), 0);
+    const open = PROJECTS.reduce((n, p) => n + (p.queue ? p.queue.length : 0), 0);
+    const active = PROJECTS.filter((p) => norm(p.status) === "ACTIVE").length;
+    return [
+      ["PROJECTS", PROJECTS.length],
+      ["ACTIVE", active],
+      ["MEDIA", media],
+      ["SNIPPETS", snips],
+      ["OPEN TASKS", open],
+    ];
+  }, []);
+
+  return (
+    <div className="grid grid-cols-2 gap-px border border-neutral-800 bg-neutral-800 sm:grid-cols-5">
+      {s.map(([k, v]) => (
+        <div key={k} className="bg-neutral-950 px-4 py-4">
+          <div className="text-neutral-600" style={micro}>
+            {k}
+          </div>
+          <div className="mt-2 tabular-nums text-emerald-400" style={{ fontSize: "22px" }}>
+            {String(v).padStart(2, "0")}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/* ── project card ──────────────────────────────────────────────── */
 function ProjectCard({ p }) {
   return (
     <article
@@ -595,7 +855,7 @@ function ProjectCard({ p }) {
     >
       <div className="flex items-center justify-between gap-3 border-b border-neutral-800 px-4 py-3">
         <h3
-          className="font-bold text-neutral-100"
+          className="min-w-0 truncate font-bold text-neutral-100"
           style={{ fontSize: "13px", letterSpacing: "0.04em" }}
         >
           {p.name}
@@ -620,12 +880,21 @@ function ProjectCard({ p }) {
             </div>
           ))}
         </div>
+
+        {p.tags && p.tags.length > 0 && (
+          <div className="flex flex-wrap gap-1">
+            {p.tags.map((t) => (
+              <Tag key={t} label={t} />
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="flex items-center justify-between border-t border-neutral-800 px-4 py-3">
         <span className="text-neutral-700" style={micro}>
-          {p.media ? `${p.media.length} MEDIA` : "NO MEDIA"}
-          {p.code ? ` · ${p.code.length} SNIPPET${p.code.length > 1 ? "S" : ""}` : ""}
+          {p.year || ""}
+          {p.media ? ` · ${p.media.length} MEDIA` : ""}
+          {p.code ? ` · ${p.code.length} SRC` : ""}
         </span>
         <span className="text-emerald-400" style={micro}>
           OPEN ›
@@ -645,9 +914,27 @@ function ProjectPage({ p }) {
     window.scrollTo({ top: 0, behavior: "auto" });
   }, [p.id]);
 
+  /* ←/→ walk projects, Esc returns home */
+  useEffect(() => {
+    const onKey = (e) => {
+      const tag = (e.target && e.target.tagName) || "";
+      if (tag === "INPUT" || tag === "TEXTAREA") return;
+      if (e.key === "ArrowRight") goProject(next.id);
+      if (e.key === "ArrowLeft") goProject(prev.id);
+      if (e.key === "Escape") goHome();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [prev.id, next.id]);
+
+  const shareUrl =
+    typeof window !== "undefined"
+      ? `${window.location.origin}${window.location.pathname}#/p/${p.id}`
+      : `#/p/${p.id}`;
+
   return (
     <main className="min-w-0 flex-1 px-4 pb-32 pt-8 sm:px-6 lg:px-10">
-      <div className="mb-6 flex items-center gap-4">
+      <div className="mb-6 flex flex-wrap items-center gap-3">
         <button
           onClick={goHome}
           className="border border-neutral-800 px-3 py-2 text-neutral-400 hover:border-emerald-400 hover:text-emerald-400 focus:outline-none focus:ring-1 focus:ring-emerald-400"
@@ -658,10 +945,25 @@ function ProjectPage({ p }) {
         <span className="truncate text-neutral-700" style={micro}>
           ~/projects/{p.id}
         </span>
+        <span className="ml-auto text-neutral-800" style={micro}>
+          ← → SWITCH · ESC HOME
+        </span>
       </div>
 
       <header className="border border-neutral-800 bg-neutral-950">
-        <PanelHead tag="PROJECT" right={<StatusPill status={p.status} />} />
+        <PanelHead
+          tag="PROJECT"
+          right={
+            <div className="flex items-center gap-2">
+              {p.year && (
+                <span className="text-neutral-700" style={micro}>
+                  {p.year}
+                </span>
+              )}
+              <StatusPill status={p.status} />
+            </div>
+          }
+        />
         <div className="space-y-4 p-6">
           <h1
             className="font-bold uppercase leading-none text-neutral-100"
@@ -678,22 +980,30 @@ function ProjectPage({ p }) {
           <p className="max-w-2xl leading-relaxed text-neutral-400" style={{ fontSize: "14px" }}>
             {p.blurb}
           </p>
-          {p.links && p.links.length > 0 && (
-            <div className="flex flex-wrap gap-2 pt-1">
-              {p.links.map((l) => (
-                <a
-                  key={l.label}
-                  href={l.href}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="border border-neutral-800 px-3 py-2 text-neutral-400 hover:border-emerald-400 hover:text-emerald-400 focus:outline-none focus:ring-1 focus:ring-emerald-400"
-                  style={micro}
-                >
-                  {l.label} ↗
-                </a>
+
+          {p.tags && p.tags.length > 0 && (
+            <div className="flex flex-wrap gap-1">
+              {p.tags.map((t) => (
+                <Tag key={t} label={t} />
               ))}
             </div>
           )}
+
+          <div className="flex flex-wrap items-center gap-2 pt-1">
+            {(p.links || []).map((l) => (
+              <a
+                key={l.label}
+                href={l.href}
+                target="_blank"
+                rel="noreferrer"
+                className="border border-neutral-800 px-3 py-2 text-neutral-400 hover:border-emerald-400 hover:text-emerald-400 focus:outline-none focus:ring-1 focus:ring-emerald-400"
+                style={micro}
+              >
+                {l.label} ↗
+              </a>
+            ))}
+            <CopyButton text={shareUrl} label="COPY LINK" done="LINK COPIED" />
+          </div>
         </div>
       </header>
 
@@ -798,14 +1108,41 @@ function ProjectPage({ p }) {
   );
 }
 
-/* ── command line ──────────────────────────────────────────────── */
-function CommandBar({ onNavigate }) {
+/* ═══ COMMAND LINE ══════════════════════════════════════════════ */
+const COMMANDS = [
+  "help",
+  "ls",
+  "open",
+  "cat",
+  "grep",
+  "back",
+  "whoami",
+  "stack",
+  "theme",
+  "neofetch",
+  "date",
+  "clear",
+];
+
+const ASCII = [
+  "   /\\    ",
+  "  /  \\   ",
+  " /____\\  ",
+  " |    |  ",
+  " |    |  ",
+  "/|    |\\ ",
+];
+
+function CommandBar({ onNavigate, theme, setTheme, inputRef }) {
   const [history, setHistory] = useState([
-    { k: "out", v: "session opened. `help` lists commands." },
+    { k: "out", v: "session opened. `help` lists commands · ⌘K focuses this line." },
   ]);
   const [value, setValue] = useState("");
   const [open, setOpen] = useState(false);
+  const [past, setPast] = useState([]);
+  const [cursor, setCursor] = useState(-1);
   const scroller = useRef(null);
+  const started = useRef(Date.now());
 
   useEffect(() => {
     if (scroller.current) scroller.current.scrollTop = scroller.current.scrollHeight;
@@ -818,28 +1155,82 @@ function CommandBar({ onNavigate }) {
       const line = raw.trim();
       if (!line) return;
       push("in", line);
+      setPast((p) => [...p, line]);
+      setCursor(-1);
+
       const [cmd, ...rest] = line.split(/\s+/);
       const arg = rest.join(" ").toLowerCase();
 
       switch (cmd.toLowerCase()) {
         case "help":
-          push(
-            "out",
-            "help · ls · open <section|project> · cat <project> · back · whoami · stack · clear"
-          );
+          push("out", "NAVIGATE   ls · open <target> · cat <project> · back");
+          push("out", "SEARCH     grep <term>");
+          push("out", "INFO       whoami · stack · neofetch · date");
+          push("out", `DISPLAY    theme <${THEME_IDS.join("|")}> · clear`);
+          push("out", "KEYS       ⌘K focus · ESC blur · ↑↓ history · TAB complete");
           break;
+
         case "ls":
-          push("out", "sections:  " + SECTIONS.map((s) => s.id).join("  "));
-          push("out", "projects:  " + PROJECTS.map((p) => p.id).join("  "));
+          push("out", "sections/  " + SECTIONS.map((s) => s.id).join("  "));
+          push("out", "projects/  " + PROJECTS.map((p) => p.id).join("  "));
           break;
+
         case "back":
           goHome();
           push("out", "→ /");
           break;
+
+        case "grep": {
+          if (!arg) {
+            push("err", "usage: grep <term>");
+            break;
+          }
+          const hits = PROJECTS.filter((p) =>
+            [p.name, p.blurb, p.tagline, (p.tags || []).join(" ")]
+              .join(" ")
+              .toLowerCase()
+              .includes(arg)
+          );
+          if (hits.length === 0) push("err", `no match for '${arg}'`);
+          else hits.forEach((h) => push("out", `  ${h.id.padEnd(12)} ${h.name}`));
+          break;
+        }
+
+        case "theme": {
+          if (THEME_IDS.includes(arg)) {
+            setTheme(arg);
+            push("out", `accent → ${arg}`);
+          } else {
+            push("err", `unknown theme. options: ${THEME_IDS.join(", ")}`);
+          }
+          break;
+        }
+
+        case "neofetch": {
+          const lines = [
+            `${PROFILE.handle}@${PROFILE.node}`,
+            "─────────────────────",
+            `location   ${PROFILE.sector}`,
+            `projects   ${PROJECTS.length}`,
+            `active     ${PROJECTS.filter((p) => norm(p.status) === "ACTIVE").length}`,
+            `theme      ${theme}`,
+            `uptime     ${Math.floor((Date.now() - started.current) / 1000)}s`,
+          ];
+          const rows = Math.max(ASCII.length, lines.length);
+          for (let r = 0; r < rows; r++) {
+            push("out", `${ASCII[r] || "         "}  ${lines[r] || ""}`);
+          }
+          break;
+        }
+
+        case "date":
+          push("out", new Date().toString());
+          break;
+
         case "open":
         case "cd":
         case "cat": {
-          if (arg === ".." || arg === "/") {
+          if (arg === ".." || arg === "/" || arg === "~") {
             goHome();
             push("out", "→ /");
             break;
@@ -860,29 +1251,85 @@ function CommandBar({ onNavigate }) {
           push("err", `no such target '${arg || "?"}'. run ls to see what's here.`);
           break;
         }
+
         case "whoami":
           push("out", `${PROFILE.handle} — ${PROFILE.role}`);
           break;
+
         case "stack":
           STACK.forEach((s) => push("out", `  ${s.name.padEnd(20)} ${s.level}%  ${s.note}`));
           break;
+
         case "clear":
           setHistory([]);
           break;
+
         case "sudo":
           push("err", "you already have root here. it's your own portfolio.");
           break;
+
+        case "rm":
+          push("err", "nice try.");
+          break;
+
         default:
           push("err", `command not found: ${cmd}. try help.`);
       }
     },
-    [onNavigate]
+    [onNavigate, setTheme, theme]
   );
+
+  /* tab completion over commands, then project + section ids */
+  const complete = () => {
+    const parts = value.split(/\s+/);
+    if (parts.length <= 1) {
+      const hit = COMMANDS.filter((c) => c.startsWith(parts[0].toLowerCase()));
+      if (hit.length === 1) setValue(hit[0] + " ");
+      else if (hit.length > 1) push("out", hit.join("  "));
+      return;
+    }
+    const targets = [
+      ...PROJECTS.map((p) => p.id),
+      ...SECTIONS.map((s) => s.id),
+      ...THEME_IDS,
+    ];
+    const last = parts[parts.length - 1].toLowerCase();
+    const hit = targets.filter((t) => t.toLowerCase().startsWith(last));
+    if (hit.length === 1) setValue([...parts.slice(0, -1), hit[0]].join(" "));
+    else if (hit.length > 1) push("out", hit.join("  "));
+  };
+
+  const onKeyDown = (e) => {
+    if (e.key === "Tab") {
+      e.preventDefault();
+      complete();
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      if (past.length === 0) return;
+      const n = cursor < 0 ? past.length - 1 : Math.max(0, cursor - 1);
+      setCursor(n);
+      setValue(past[n]);
+    } else if (e.key === "ArrowDown") {
+      e.preventDefault();
+      if (cursor < 0) return;
+      const n = cursor + 1;
+      if (n >= past.length) {
+        setCursor(-1);
+        setValue("");
+      } else {
+        setCursor(n);
+        setValue(past[n]);
+      }
+    } else if (e.key === "Escape") {
+      e.target.blur();
+      setOpen(false);
+    }
+  };
 
   return (
     <div className="fixed inset-x-0 bottom-0 z-40 border-t border-neutral-800 bg-neutral-950">
       {open && (
-        <div ref={scroller} className="max-h-48 overflow-y-auto px-4 py-3 sm:px-6">
+        <div ref={scroller} className="max-h-56 overflow-y-auto px-4 py-3 sm:px-6">
           {history.map((h, i) => (
             <div
               key={i}
@@ -914,11 +1361,15 @@ function CommandBar({ onNavigate }) {
           {PROFILE.handle}@{PROFILE.node.toLowerCase()} $
         </span>
         <input
+          ref={inputRef}
           value={value}
           onChange={(e) => setValue(e.target.value)}
+          onKeyDown={onKeyDown}
           onFocus={() => setOpen(true)}
-          placeholder="type help"
+          placeholder="type help  ·  ⌘K"
           aria-label="Command input"
+          spellCheck={false}
+          autoComplete="off"
           className="min-w-0 flex-1 bg-transparent text-neutral-200 outline-none placeholder:text-neutral-700 focus:ring-0"
           style={tiny}
         />
@@ -932,6 +1383,118 @@ function CommandBar({ onNavigate }) {
         </button>
       </form>
     </div>
+  );
+}
+
+/* ── projects section with search + filters ────────────────────── */
+function ProjectExplorer() {
+  const [q, setQ] = useState("");
+  const [tag, setTag] = useState(null);
+  const [status, setStatus] = useState(null);
+
+  const allTags = useMemo(() => {
+    const s = new Set();
+    PROJECTS.forEach((p) => (p.tags || []).forEach((t) => s.add(t)));
+    return [...s].sort();
+  }, []);
+
+  const shown = useMemo(() => {
+    const term = q.trim().toLowerCase();
+    return PROJECTS.filter((p) => {
+      if (status && norm(p.status) !== status) return false;
+      if (tag && !(p.tags || []).includes(tag)) return false;
+      if (!term) return true;
+      return [p.name, p.blurb, p.tagline, (p.tags || []).join(" ")]
+        .join(" ")
+        .toLowerCase()
+        .includes(term);
+    });
+  }, [q, tag, status]);
+
+  const clearAll = () => {
+    setQ("");
+    setTag(null);
+    setStatus(null);
+  };
+  const filtered = q || tag || status;
+
+  return (
+    <>
+      <div className="mb-4 flex items-center gap-4">
+        <h2
+          className="border border-neutral-800 px-3 py-1 font-bold text-neutral-200"
+          style={micro}
+        >
+          PROJECTS
+        </h2>
+        <div className="h-px flex-1 bg-neutral-800" />
+        <span className="text-neutral-700" style={micro}>
+          {shown.length} / {PROJECTS.length}
+        </span>
+      </div>
+
+      <div className="mb-4 border border-neutral-800 bg-neutral-950">
+        <div className="flex items-center gap-3 border-b border-neutral-800 px-4 py-3">
+          <span className="shrink-0 text-emerald-400" style={tiny}>
+            grep
+          </span>
+          <input
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="filter by name, tag, or description"
+            aria-label="Filter projects"
+            spellCheck={false}
+            className="min-w-0 flex-1 bg-transparent text-neutral-200 outline-none placeholder:text-neutral-700"
+            style={tiny}
+          />
+          {filtered && (
+            <button
+              onClick={clearAll}
+              className="shrink-0 border border-neutral-800 px-2 py-1 text-neutral-500 hover:text-neutral-200"
+              style={micro}
+            >
+              RESET
+            </button>
+          )}
+        </div>
+
+        <div className="flex flex-wrap items-center gap-1 px-4 py-3">
+          {["ACTIVE", "BUILD"].map((s) => (
+            <Tag
+              key={s}
+              label={s}
+              active={status === s}
+              onClick={() => setStatus(status === s ? null : s)}
+            />
+          ))}
+          <span className="mx-2 h-4 w-px bg-neutral-800" />
+          {allTags.map((t) => (
+            <Tag key={t} label={t} active={tag === t} onClick={() => setTag(tag === t ? null : t)} />
+          ))}
+        </div>
+      </div>
+
+      {shown.length === 0 ? (
+        <div className="border border-neutral-800 bg-neutral-950 p-8 text-center">
+          <p className="text-neutral-500" style={tiny}>
+            no projects match that filter.
+          </p>
+          <button
+            onClick={clearAll}
+            className="mt-4 border border-emerald-400 px-3 py-2 text-emerald-400"
+            style={micro}
+          >
+            RESET FILTERS
+          </button>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {shown.map((p) => (
+            <ProjectCard key={p.id} p={p} />
+          ))}
+        </div>
+      )}
+    </>
   );
 }
 
@@ -979,26 +1542,14 @@ function HomeView({ bind }) {
             <Attitude />
           </div>
         </div>
+
+        <div className="mt-4">
+          <StatsStrip />
+        </div>
       </section>
 
       <section ref={bind("projects")} className="scroll-mt-16 pt-12">
-        <div className="mb-4 flex items-center gap-4">
-          <h2
-            className="border border-neutral-800 px-3 py-1 font-bold text-neutral-200"
-            style={micro}
-          >
-            PROJECTS
-          </h2>
-          <div className="h-px flex-1 bg-neutral-800" />
-          <span className="text-neutral-700" style={micro}>
-            {PROJECTS.length} DEPLOYED
-          </span>
-        </div>
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {PROJECTS.map((p) => (
-            <ProjectCard key={p.id} p={p} />
-          ))}
-        </div>
+        <ProjectExplorer />
       </section>
 
       <section ref={bind("stack")} className="scroll-mt-16 pt-12">
@@ -1067,13 +1618,17 @@ function HomeView({ bind }) {
   );
 }
 
-/* ── page shell ────────────────────────────────────────────────── */
+/* ═══ SHELL ═════════════════════════════════════════════════════ */
 export default function TerminalPortfolio() {
   const [booted, setBooted] = useState(false);
   const [clock, setClock] = useState("--:--:--");
   const [active, setActive] = useState("system");
+  const [theme, setTheme] = useState("phosphor");
   const refs = useRef({});
+  const cmdRef = useRef(null);
   const route = useHashRoute();
+
+  useAccentStylesheet();
 
   const project = route.view === "project" ? PROJECTS.find((p) => p.id === route.id) : null;
 
@@ -1089,6 +1644,39 @@ export default function TerminalPortfolio() {
     return () => clearInterval(iv);
   }, []);
 
+  /* ⌘K / Ctrl+K focuses the command line from anywhere */
+  useEffect(() => {
+    const onKey = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        if (cmdRef.current) cmdRef.current.focus();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
+  /* scroll-spy: sidebar tracks whichever section is in view */
+  useEffect(() => {
+    if (route.view !== "home") return;
+    const obs = new IntersectionObserver(
+      (entries) => {
+        const vis = entries
+          .filter((e) => e.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
+        if (vis[0] && vis[0].target.dataset.sec) setActive(vis[0].target.dataset.sec);
+      },
+      { rootMargin: "-20% 0px -60% 0px", threshold: [0.1, 0.5, 1] }
+    );
+    Object.entries(refs.current).forEach(([id, el]) => {
+      if (el) {
+        el.dataset.sec = id;
+        obs.observe(el);
+      }
+    });
+    return () => obs.disconnect();
+  }, [route.view]);
+
   const go = useCallback((id) => {
     setActive(id);
     const el = refs.current[id];
@@ -1100,15 +1688,18 @@ export default function TerminalPortfolio() {
   };
 
   return (
-    <div className="min-h-screen bg-neutral-950 font-mono text-neutral-300 antialiased">
+    <div
+      className="tp min-h-screen bg-neutral-950 font-mono text-neutral-300 antialiased"
+      style={{ "--accent": THEMES[theme] }}
+    >
       {!booted && <Boot onDone={() => setBooted(true)} />}
 
-      <header className="sticky top-0 z-30 flex items-center justify-between border-b border-neutral-800 bg-neutral-950 px-4 py-3 sm:px-6">
+      <header className="sticky top-0 z-30 flex items-center justify-between gap-4 border-b border-neutral-800 bg-neutral-950 px-4 py-3 sm:px-6">
         <button
           onClick={goHome}
-          className="flex items-center gap-4 focus:outline-none focus:ring-1 focus:ring-emerald-400"
+          className="flex min-w-0 items-center gap-4 focus:outline-none focus:ring-1 focus:ring-emerald-400"
         >
-          <span className="font-bold text-neutral-100" style={micro}>
+          <span className="truncate font-bold text-neutral-100" style={micro}>
             {PROFILE.handle.toUpperCase()}
           </span>
           <span className="hidden h-3 w-px bg-neutral-800 sm:block" />
@@ -1116,8 +1707,24 @@ export default function TerminalPortfolio() {
             {PROFILE.sector}
           </span>
         </button>
-        <div className="flex items-center gap-4">
-          <span className="tabular-nums text-neutral-600" style={micro}>
+
+        <div className="flex shrink-0 items-center gap-3">
+          {/* theme swatches */}
+          <div className="hidden items-center gap-1 sm:flex">
+            {THEME_IDS.map((t) => (
+              <button
+                key={t}
+                onClick={() => setTheme(t)}
+                aria-label={`${t} theme`}
+                title={t}
+                className={`h-3 w-3 border ${
+                  theme === t ? "border-neutral-300" : "border-neutral-800"
+                }`}
+                style={{ backgroundColor: THEMES[t] }}
+              />
+            ))}
+          </div>
+          <span className="hidden tabular-nums text-neutral-600 sm:inline" style={micro}>
             {clock}
           </span>
           <span className="flex items-center gap-2 border border-neutral-800 px-2 py-1">
@@ -1164,6 +1771,10 @@ export default function TerminalPortfolio() {
               </div>
             </div>
           )}
+
+          <div className="mt-auto px-5 pt-8 text-neutral-800" style={micro}>
+            ⌘K · TERMINAL
+          </div>
         </nav>
 
         {route.view === "project" ? (
@@ -1188,7 +1799,12 @@ export default function TerminalPortfolio() {
         )}
       </div>
 
-      <CommandBar onNavigate={go} />
+      <CommandBar
+        onNavigate={go}
+        theme={theme}
+        setTheme={setTheme}
+        inputRef={cmdRef}
+      />
     </div>
   );
 }

@@ -1,3 +1,15 @@
+/* ═══════════════════════════════════════════════════════════════
+   THIS IS THE ONLY FILE YOU EDIT.
+
+   Required per project:  id, name, status, blurb, specs
+   Optional:              tagline, year, tags, links, media, body, code
+
+   media types:  "model" (.glb)  |  "image"  |  "video" (.mp4/.webm)
+   ALL media paths are relative to public/ — NEVER src/assets.
+       public/models/rocket.glb   →   src: "/models/rocket.glb"
+   Filenames: no spaces, no parentheses, no tildes. Use dashes.
+   ═══════════════════════════════════════════════════════════════ */
+
 export const PROFILE = {
   handle: "Arhaan_Sharma",
   node: "projects",
@@ -7,7 +19,7 @@ export const PROFILE = {
     "I like making robots, UAVs, rockets and everything in between. I build the layer where software meets hardware. Currently writing a flight controller from bare metal because the off-the-shelf stack didn't speak to my IMU.",
   links: [
     { label: "GITHUB", href: "https://github.com/arhaan2010" },
-    { label: "EMAIL", href: "mailto:arhaansharmadps@gmail.com" },
+    { label: "EMAIL", href: "mailto:arhaanprojects@gmail.com" },
     { label: "LINKEDIN", href: "https://www.linkedin.com/in/arhaan-sharma-9510b7313/" },
   ],
 };
@@ -17,7 +29,9 @@ export const PROJECTS = [
     id: "fc",
     name: "STM32 Custom Flight Controller",
     status: "ACTIVE",
+    year: "2026",
     tagline: "Bare-metal flight control firmware, board up",
+    tags: ["firmware", "c", "hardware", "uav"],
     blurb:
       "A flight controller built from scratch, board up. Started because the BMI323 wasn't supported in the mainline Betaflight tree, so the driver got written by hand.",
     specs: [
@@ -27,15 +41,7 @@ export const PROJECTS = [
       ["OUTPUT", "DShot / PWM mixer"],
     ],
     queue: ["CRSF parser", "motor mixer", "arming + failsafe logic"],
-
-    /* ── links shown on the detail page ── */
-    links: [
-      { label: "REPO", href: "https://github.com/arhaan2010" },
-    ],
-
-    /* ── media: drop files in public/ and reference them from root ──
-       type "model" → .glb or .gltf   |   type "image" → any web image
-       Example: public/models/fc.glb  →  src: "/models/fc.glb"        */
+    links: [{ label: "REPO", href: "https://github.com/arhaan2010" }],
     media: [
       {
         type: "model",
@@ -48,8 +54,6 @@ export const PROJECTS = [
         caption: "First successful gyro read over SPI",
       },
     ],
-
-    /* ── long-form writeup, one object per section ── */
     body: [
       {
         heading: "WHY BUILD IT",
@@ -60,8 +64,6 @@ export const PROJECTS = [
         text: "The sensor reads clean at 8kHz and the bias estimator converges within about two seconds of power-on. The control loop runs but nothing is mixed to motors yet — CRSF parsing is next, then the mixer, then arming logic. Nothing flies until failsafe is provably correct.",
       },
     ],
-
-    /* ── copy-pasteable code. lang: "c" | "js" | "py" ── */
     code: [
       {
         label: "bmi323.c",
@@ -113,10 +115,46 @@ bool crsf_parse(const uint8_t *buf, size_t n) {
   },
 
   {
+    id: "rocket",
+    name: "TITAN",
+    status: "ACTIVE",
+    year: "2026",
+    tagline: "K-class high-power rocket, 2km apogee",
+    tags: ["rocketry", "hardware", "cad"],
+    blurb:
+      "High-power rocket targeting 2km apogee on a K-class motor, with dual-deploy recovery. Currently working the ejection timing problem before adding active maneuvering.",
+    specs: [
+      ["MOTOR", "K class"],
+      ["APOGEE", "2 km"],
+      ["RECOVERY", "Dual deploy — drogue + main"],
+    ],
+    queue: ["add maneuvering capabilities", "solve pre-ejection problems"],
+    media: [
+      {
+        type: "model",
+        src: "/models/rocket-assembly.glb",
+        caption: "Full stack assembly — drag to orbit",
+      },
+      {
+        type: "image",
+        src: "/img/titan-pad.jpg",
+        caption: "On the pad before the first static test",
+      },
+      {
+        type: "video",
+        src: "/video/titan-launch.mp4",
+        caption: "Launch footage",
+      },
+    ],
+  },
+
+  {
     id: "war",
     name: "Bahubali",
     status: "ACTIVE",
+    year: "2025",
     tagline: "8kg dual-disk combat robot",
+    tags: ["robotics", "hardware", "combat"],
     blurb:
       "An 8kg double-disk war robot running two 1.5kg disks. Custom-fabricated ESCs, titanium disks, and custom aluminium and GFRP parts — the most technologically advanced robot in the Indian combat robotics scene.",
     specs: [
@@ -126,14 +164,18 @@ bool crsf_parse(const uint8_t *buf, size_t n) {
       ["ELECTRONICS", "Custom-fabricated ESCs"],
     ],
     queue: ["titanium support rod fabrication", "custom ESC firmware development"],
-    media: [{ type: "image", src: "/img/bahubali.jpg", caption: "Add a photo at public/img/bahubali.jpg" }],
+    media: [
+      { type: "image", src: "/img/bahubali.jpg", caption: "Add a photo at public/img/bahubali.jpg" },
+    ],
   },
 
   {
     id: "robo",
     name: "RoboSphere",
     status: "ACTIVE",
+    year: "2025",
     tagline: "Robotics education for underprivileged students",
+    tags: ["nonprofit", "education", "robotics"],
     blurb:
       "Spreading the gift of robotics and the ability to create things to the underprivileged. A non-profit initiative helping students learn robotics and programming through workshops, competitions and mentorship.",
     specs: [
@@ -148,24 +190,25 @@ bool crsf_parse(const uint8_t *buf, size_t n) {
     id: "sahayak",
     name: "Sahayak",
     status: "BUILD",
+    year: "2025",
     tagline: "Survival toolkit for rural migrant labourers",
+    tags: ["web", "social", "ml"],
     blurb:
       "A place to empower rural migrant labourers with the knowledge to survive in Indian metropolitan cities. A one-stop solution for the problems they face, with a particular focus on women's empowerment.",
     specs: [
       ["TOPICS", "Skill development, interview prep, multilingual support"],
       ["ENTERPRISE", "Business plans, funding, marketing, legal support"],
     ],
-    queue: [
-      "Real-time translation for job interviews",
-      "Lighter UI/UX for low-end devices",
-    ],
+    queue: ["Real-time translation for job interviews", "Lighter UI/UX for low-end devices"],
   },
 
   {
     id: "inv",
     name: "Inventory Management System",
     status: "ACTIVE",
+    year: "2025",
     tagline: "Parts tracking for the school robotics club",
+    tags: ["web", "tooling"],
     blurb:
       "An inventory system for the school robotics club — tracks every part and component, and which robot or project each one is currently committed to.",
     specs: [
@@ -173,17 +216,16 @@ bool crsf_parse(const uint8_t *buf, size_t n) {
       ["USERS", "20+"],
       ["COMPONENTS", "102"],
     ],
-    queue: [
-      "Email notifications for lending requests",
-      "Discord bot for inventory management",
-    ],
+    queue: ["Email notifications for lending requests", "Discord bot for inventory management"],
   },
 
   {
     id: "wattaware",
     name: "WattAware",
     status: "BUILD",
+    year: "2026",
     tagline: "Live laptop power draw → cumulative CO₂",
+    tags: ["desktop", "javascript", "tooling"],
     blurb:
       "Desktop app that reads live laptop power draw and turns it into cumulative CO₂. Started life as Python sidecars spawned from Electron, then got rewritten as pure Node.",
     specs: [
@@ -193,37 +235,46 @@ bool crsf_parse(const uint8_t *buf, size_t n) {
       ["CHARTS", "Chart.js"],
     ],
     queue: ["idle-draw calibration", "export to CSV"],
+    
   },
-
   {
-    id: "rocket",
-    name: "TITAN",
+    id: "LFR1",
+    name: "LFR v1",
     status: "ACTIVE",
-    tagline: "— add a one-liner —",
+    year: "2023",
+    tagline: "Basic line-following robot for competitions",
+    tags: ["robotics", "hardware", "combat"],
     blurb:
-      "Fill this in. Keep the object shape — id, name, status, blurb — and the card plus detail page build themselves.",
+      "A basic line-following robot built for competitions. It uses simple IR sensors to detect the line and a PID controller to follow it accurately.",
     specs: [
-      ["MOTOR", "K class"],
-      ["APOGEE", "2 KM"],
-      ["RECOVERY", "Dual drogue + main"],
+      ["AlGORITHM", "PID controller"],
+      ["ARRAY", "4 individual IR sensors"],
+      ["CHASSIS", "Acrylic frame with 3D printed mounts"],
+      ["ELECTRONICS", "Custom-fabricated ESCs"],
     ],
-    queue: ["add maneuvering capabilities", "solve pre-ejection problems"],
+    queue: ["titanium support rod fabrication", "custom ESC firmware development"],
     media: [
-      {
-        type: "model",
-        src: "src/assets/Rocket Assembly (~recovered).glb",
-        caption: "Board revision B — drag to orbit",
-      },
-      {
-        type: "image",
-        src: "/img/fc-bringup.jpg",
-        caption: "First successful gyro read over SPI",
-      },
-      {
-        type: "video",
-        src: "/img/fc-bringup.mp4",
-        caption: "First successful gyro read over SPI",
-      },
+      { type: "image", src: "/img/bahubali.jpg", caption: "Add a photo at public/img/bahubali.jpg" },
+    ],
+  },
+  {
+    id: "LFR2",
+    name: "LFRV2",
+    status: "ACTIVE",
+    year: "2025",
+    tagline: "5 IR SENSOR ARRAYS WITH BOTH BLACK AND WHITE LINE DETECTION",
+    tags: ["robotics", "hardware", "autonomous"],
+    blurb:
+      "An 8kg double-disk war robot running two 1.5kg disks. Custom-fabricated ESCs, titanium disks, and custom aluminium and GFRP parts — the most technologically advanced robot in the Indian combat robotics scene.",
+    specs: [
+      ["WEIGHT", "8 kg"],
+      ["WEAPON", "2 × 1.5 kg titanium disks"],
+      ["CHASSIS", "Aluminium + GFRP"],
+      ["ELECTRONICS", "Custom-fabricated ESCs"],
+    ],
+    queue: ["titanium support rod fabrication", "custom ESC firmware development"],
+    media: [
+      { type: "image", src: "/img/bahubali.jpg", caption: "Add a photo at public/img/bahubali.jpg" },
     ],
   },
 ];
