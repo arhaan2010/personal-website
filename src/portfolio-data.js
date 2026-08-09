@@ -254,7 +254,7 @@ bool crsf_parse(const uint8_t *buf, size_t n) {
     ],
     queue: ["titanium support rod fabrication", "custom ESC firmware development"],
     media: [
-      { type: "image", src: "/img/bahubali.jpg", caption: "Add a photo at public/img/bahubali.jpg" },
+      { type: "image", src: "/img/bahubali.jpg", caption: "Add a photo or video at public/img/bahubali.jpg" },
     ],
   },
   {
