@@ -21,9 +21,6 @@ const norm = (s) => (s || "").toUpperCase();
    ═════════════════════════════════════════════════════════════ */
 const THEMES = {
   phosphor: "#4ade80",
-  amber: "#fbbf24",
-  ice: "#38bdf8",
-  blood: "#f87171",
 };
 const THEME_IDS = Object.keys(THEMES);
 
@@ -1512,7 +1509,7 @@ function HomeView({ bind }) {
                 style={{ fontSize: "clamp(28px, 6vw, 52px)", letterSpacing: "-0.03em" }}
               >
                 {PROFILE.handle}
-                <span className="text-emerald-400">_</span>
+                <span className="text-emerald-400"> </span>
               </h1>
               <p className="text-neutral-500" style={tiny}>
                 {PROFILE.role}

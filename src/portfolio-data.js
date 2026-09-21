@@ -11,7 +11,7 @@
    ═══════════════════════════════════════════════════════════════ */
 
 export const PROFILE = {
-  handle: "Arhaan_Sharma",
+  handle: "Arhaan Sharma",
   node: "projects",
   sector: "Gurugram, India",
   role: "Embedded systems · control loops · Rockets & drones · Machine learning",
@@ -25,6 +25,26 @@ export const PROFILE = {
 };
 
 export const PROJECTS = [
+  {
+    id: "war1",
+    name: "Vader",
+    status: "ACTIVE",
+    year: "2026",
+    tagline: "3Lbs asymmetric combat robot",
+    tags: ["robotics", "hardware", "combat"],
+    blurb:
+      "A 3lb asymmetric combat robot with a spinning disk weapon. Custom Made PLA chassis with 3D printed mounts, and custom ESCs. The robot is designed to be fast and agile, with a focus on maneuverability in the arena.",
+    specs: [
+      ["WEIGHT", "~1.5 kg"],
+      ["WEAPON", "500 gram Asymetric spinning disk"],
+      ["CHASSIS", "PLA CF"],
+      ["ELECTRONICS", "Custom-fabricated ESCs, 3036 Brushless motors, Custom ELRS to PWM receiver"],
+    ],
+    queue: ["Combat testing and tuning", "Fixing the gear reduction ratio for better torque", "Redesigning the weapon mount for better stability"],
+    media: [
+      { type: "image", src: "src/assets/vader.png", caption: "Add a photo at public/img/bahubali.jpg" },
+    ],
+  },
   {
     id: "fc",
     name: "STM32 Custom Flight Controller",
@@ -165,7 +185,7 @@ bool crsf_parse(const uint8_t *buf, size_t n) {
     ],
     queue: ["titanium support rod fabrication", "custom ESC firmware development"],
     media: [
-      { type: "image", src: "/img/bahubali.jpg", caption: "Add a photo at public/img/bahubali.jpg" },
+      { type: "image", src: "src/assets/bahubali.png", caption: "A rendered image of Bahubali without its top cover" },
     ],
   },
 
